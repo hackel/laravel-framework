@@ -545,7 +545,7 @@ class FormBuilder {
 
 		$options = array('value' => e($value), 'selected' => $selected);
 
-		if ($value == '')
+		if ($value === '')
 		{
 			$options[] = 'disabled';
 		}

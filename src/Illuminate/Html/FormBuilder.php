@@ -409,7 +409,7 @@ class FormBuilder {
 	 * @param  array   $options
 	 * @return string
 	 */
-	public function select($name, $list = array(), $selected = null, $options = array())
+	public function select($name, $list = array(), $selected = null, $options = array(), $disabled = null)
 	{
 		// When building a select box the "value" attribute is really the selected one
 		// so we will use that when checking the model or session for a value which
@@ -427,7 +427,7 @@ class FormBuilder {
 
 		foreach ($list as $value => $display)
 		{
-			$html[] = $this->getSelectOption($display, $value, $selected);
+			$html[] = $this->getSelectOption($display, $value, $selected, $disabled);
 		}
 
 		// Once we have all of this HTML, we can join this into a single element after
@@ -450,11 +450,11 @@ class FormBuilder {
 	 * @param  array   $options
 	 * @return string
 	 */
-	public function selectRange($name, $begin, $end, $selected = null, $options = array())
+	public function selectRange($name, $begin, $end, $selected = null, $options = array(), $disabled = null)
 	{
 		$range = array_combine($range = range($begin, $end), $range);
 
-		return $this->select($name, $range, $selected, $options);
+		return $this->select($name, $range, $selected, $options, $disabled);
 	}
 
 	/**
@@ -481,7 +481,7 @@ class FormBuilder {
 	 * @param  string  $format
 	 * @return string
 	 */
-	public function selectMonth($name, $selected = null, $options = array(), $format = '%B')
+	public function selectMonth($name, $selected = null, $options = array(), $format = '%B', $disabled = null)
 	{
 		$months = array();
 
@@ -490,7 +490,7 @@ class FormBuilder {
 			$months[$month] = strftime($format, mktime(0, 0, 0, $month, 1));
 		}
 
-		return $this->select($name, $months, $selected, $options);
+		return $this->select($name, $months, $selected, $options, $disabled);
 	}
 
 	/**
@@ -501,14 +501,14 @@ class FormBuilder {
 	 * @param  string  $selected
 	 * @return string
 	 */
-	public function getSelectOption($display, $value, $selected)
+	public function getSelectOption($display, $value, $selected, $disabled)
 	{
 		if (is_array($display))
 		{
-			return $this->optionGroup($display, $value, $selected);
+			return $this->optionGroup($display, $value, $selected, $disabled);
 		}
 
-		return $this->option($display, $value, $selected);
+		return $this->option($display, $value, $selected, $disabled);
 	}
 
 	/**
@@ -519,13 +519,13 @@ class FormBuilder {
 	 * @param  string  $selected
 	 * @return string
 	 */
-	protected function optionGroup($list, $label, $selected)
+	protected function optionGroup($list, $label, $selected, $disabled)
 	{
 		$html = array();
 
 		foreach ($list as $value => $display)
 		{
-			$html[] = $this->option($display, $value, $selected);
+			$html[] = $this->option($display, $value, $selected, $disabled);
 		}
 
 		return '<optgroup label="'.e($label).'">'.implode('', $html).'</optgroup>';
@@ -539,16 +539,13 @@ class FormBuilder {
 	 * @param  string  $selected
 	 * @return string
 	 */
-	protected function option($display, $value, $selected)
+	protected function option($display, $value, $selected, $disabled)
 	{
 		$selected = $this->getSelectedValue($value, $selected);
 
-		$options = array('value' => e($value), 'selected' => $selected);
+		$disabled = $this->getDisabledValues($value, $selected);
 
-		if ($value === '')
-		{
-			$options[] = 'disabled';
-		}
+		$options = array('value' => e($value), 'selected' => $selected, 'disabled' => $disabled);
 
 		return '<option'.$this->html->attributes($options).'>'.e($display).'</option>';
 	}
@@ -568,6 +565,23 @@ class FormBuilder {
 		}
 
 		return ((string) $value == (string) $selected) ? 'selected' : null;
+	}
+
+	/**
+	 * Determine if the value is disabled.
+	 *
+	 * @param  string  $value
+	 * @param  string  $disabled
+	 * @return string
+	 */
+	protected function getDisabledValue($value, $disabled)
+	{
+		if (is_array($disabled))
+		{
+			return in_array($value, $disabled) ? 'disabled' : null;
+		}
+
+		return ((string) $value == (string) $disabled) ? 'disabled' : null;
 	}
 
 	/**
